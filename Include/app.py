@@ -22,7 +22,6 @@ def login():
     password = request.form["password"]
 
     user = User.query.filter_by(username=username).first()
-    print(user.check_password(password))
     if user and user.check_password(password):
       session["user_id"] = user.id
       session["user_username"] = user.username
