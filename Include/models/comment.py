@@ -1,5 +1,6 @@
-from . import db  # IMPORTA la instancia ÚNICA
+from . import db
 from sqlalchemy.sql import func
+
 
 class Comment(db.Model):
   __tablename__ = "comments"

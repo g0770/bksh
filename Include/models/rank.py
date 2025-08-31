@@ -1,6 +1,6 @@
-# models.py
-from . import db  # IMPORTA la instancia ÚNICA
+from . import db
 from sqlalchemy.sql import func
+
 
 class Rank(db.Model):
   __tablename__ = "ranks"
