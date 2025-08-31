@@ -6,7 +6,7 @@ from models import db, Rank, User, Book, Chapter, Comment
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = SQLALCHEMY_DATABASE_URI
 app.config["SECRET_KEY"] = SECRET_KEY
-app.config["SQLALCHEMY_ECHO"] = False
+app.config["SQLALCHEMY_ECHO"] = False # para debug
 
 db.init_app(app)
 
@@ -22,7 +22,8 @@ def login():
     password = request.form["password"]
 
     user = User.query.filter_by(username=username).first()
-    if user and user.password == password:
+    print(user.check_password(password))
+    if user and user.check_password(password):
       session["user_id"] = user.id
       session["user_username"] = user.username
       flash("Login exitoso", "success")
@@ -43,7 +44,8 @@ def register():
     if User.query.filter((User.username == username) | (User.email == email)).first():
       flash("Usuario o email ya registrados", "danger")
     else:
-      new_user = User(username=username, email=email, password=password, rank_id=1) #rank_id = rank "User"
+      new_user = User(username=username, email=email, rank_id=1) #rank_id 1 = rank "User"
+      new_user.password = password #esta en otra linea para q se combine con secret key y se hashee
       db.session.add(new_user)
       db.session.commit()
       flash("Cuenta creada con éxito, ahora podés iniciar sesión", "success")
