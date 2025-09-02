@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Búsqueda avanzada – BKSH{% endblock %}
+{% block content %}
+
+<div class="section mb-4">
+  <div class="d-flex flex-wrap align-items-end gap-3">
+    <div>
+      <label class="text mb-1">Término buscado</label>
+      <input type="text" class="form-control" value="{{ q }}" disabled>
+    </div>
+    <form class="d-flex align-items-end gap-2" method="GET" action="{{ url_for('search') }}">
+      <input type="hidden" name="q" value="{{ q }}">
+      <div>
+        <label for="sort" class="text mb-1">Ordenar por</label>
+        <select name="sort" id="sort" class="form-select">
+          <option value="updated_desc" {{ 'selected' if sort=='updated_desc' else '' }}>Más recientes (actualizados)
+          </option>
+          <option value="created_desc" {{ 'selected' if sort=='created_desc' else '' }}>Más recientes (creados)</option>
+          <option value="creator_az" {{ 'selected' if sort=='creator_az' else '' }}>Creador (A → Z)</option>
+          <option value="chapters_desc" {{ 'selected' if sort=='chapters_desc' else '' }}>Cantidad de capítulos</option>
+        </select>
+      </div>
+      <button class="btn btn-primary">Aplicar</button>
+    </form>
+  </div>
+</div>
+
+<div class="section">
+  {% if results %}
+  <div class="row g-3">
+    {% for item in results %}
+    {% set b = item[0] %}
+    {% set chapters_count = item[1] %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card p-3 h-100">
+        <h5 class="text mb-1">{{ b.title }}</h5>
+        {% if b.subtitle %}
+        <p class="text">{{ b.subtitle }}</p>
+        {% endif %}
+        <small class="text d-block">Capítulos: {{ chapters_count }}</small>
+        <small class="text d-block">Creado: {{ b.creation_date.strftime('%Y-%m-%d %H:%M') if b.creation_date else ''
+          }}</small>
+        <small class="text d-block">Actualizado: {{ b.last_update_date.strftime('%Y-%m-%d %H:%M') if b.last_update_date
+          else '' }}</small>
+        <a class="btn btn-outline-light mt-3" href="{{ url_for('book_detail', book_id=b.id) }}">Ver</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Paginación -->
+  <nav class="mt-3">
+    <ul class="pagination">
+      <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
+        <a class="page-link"
+          href="{{ url_for('search', q=q, sort=sort, page=pagination.prev_num) if pagination.has_prev else '#' }}">
+          Anterior
+        </a>
+      </li>
+      <li class="page-item disabled">
+        <a class="page-link" href="#">Página {{ pagination.page }} / {{ pagination.pages or 1 }}</a>
+      </li>
+      <li class="page-item {{ 'disabled' if not pagination.has_next }}">
+        <a class="page-link"
+          href="{{ url_for('search', q=q, sort=sort, page=pagination.next_num) if pagination.has_next else '#' }}">
+          Siguiente
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  {% else %}
+  <p class="text m-0">No se encontraron resultados.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

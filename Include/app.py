@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from sqlalchemy import inspect
+from sqlalchemy import inspect, func
 from config import SQLALCHEMY_DATABASE_URI, SECRET_KEY
 from models import db, Rank, User, Book, Chapter, Comment
 
@@ -52,6 +52,11 @@ def register():
 
   return render_template("register.html")
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Sesión cerrada correctamente", "info")
+    return redirect(url_for("login"))
 
 @app.route("/")
 @app.route("/home")
@@ -145,6 +150,53 @@ def book_detail(book_id):
     chapters=chapters,
     pagination=pagination,
   )
+
+@app.route("/search")
+def search():
+    if "user_id" not in session:
+        return redirect(url_for("login"))
+
+    q = request.args.get("q", "", type=str).strip()
+    sort = request.args.get("sort", "updated_desc")
+    page = request.args.get("page", 1, type=int)
+    per_page = 18
+
+    base = db.session.query(
+        Book,
+        func.count(Chapter.id).label("chapters_count")
+    ).outerjoin(Chapter, Chapter.book_id == Book.id)
+
+    if q:
+        like = f"%{q}%"
+        base = base.filter(
+            db.or_(
+                Book.title.ilike(like),
+                Book.subtitle.ilike(like),
+                Book.description.ilike(like),
+            )
+        )
+        
+    base = base.group_by(Book.id)
+
+    if sort == "creator_az":
+        base = base.join(User, User.id == Book.creator_user_id).order_by(User.username.asc())
+    elif sort == "created_desc":
+        base = base.order_by(Book.creation_date.desc())
+    elif sort == "chapters_desc":
+        base = base.order_by(func.count(Chapter.id).desc(), Book.title.asc())
+    else:  # "updated_desc" default
+        base = base.order_by(Book.last_update_date.desc())
+
+    pagination = base.paginate(page=page, per_page=per_page, error_out=False)
+    results = pagination.items
+
+    return render_template(
+        "advanced_search.html",
+        q=q,
+        sort=sort,
+        results=results,
+        pagination=pagination,
+    )
 
 if __name__ == "__main__":
   with app.app_context():
