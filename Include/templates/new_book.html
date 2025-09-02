@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Nuevo Libro – BKSH{% endblock %}
+{% block content %}
+<div class="section mx-auto" style="max-width: 720px;">
+  <h3 class="text mb-3">Crear nuevo libro</h3>
+  <form method="POST" action="{{ url_for('new_book') }}">
+    <div class="mb-3">
+      <label class="form-label text">Título *</label>
+      <input type="text" name="title" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label class="form-label text">Subtítulo</label>
+      <input type="text" name="subtitle" class="form-control">
+    </div>
+    <div class="mb-3">
+      <label class="form-label text">Descripción</label>
+      <textarea name="description" class="form-control" rows="4"></textarea>
+    </div>
+    <button class="btn btn-success">Crear</button>
+  </form>
+</div>
+{% endblock %}

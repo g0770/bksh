@@ -1,23 +1,26 @@
 {% extends "base.html" %}
 {% block title %}{{ book.title }} – BKSH{% endblock %}
 {% block content %}
+
 <div class="section mb-4">
-  <h2 class="text">{{ book.title }}</h2>
-  {% if book.subtitle %}
-  <h5 class="text">{{ book.subtitle }}</h5>
-  {% endif %}
-  {% if book.description %}
-  <p class="mt-3 text">{{ book.description }}</p>
-  {% endif %}
-  <small class="text d-block">
-    Creado: {{ book.creation_date.strftime('%Y-%m-%d %H:%M') if book.creation_date else '' }}
-  </small>
-  <small class="text d-block mb-3">
-    Actualizado: {{ book.last_update_date.strftime('%Y-%m-%d %H:%M') if book.last_update_date else '' }}
-  </small>
+  <div class="d-flex justify-content-between align-items-start">
+    <div>
+      <h2 class="text">{{ book.title }}</h2>
+      {% if book.subtitle %}<h5 class="text">{{ book.subtitle }}</h5>{% endif %}
+      {% if book.description %}<p class="mt-3 text">{{ book.description }}</p>{% endif %}
+      <small class="text d-block">Creado: {{ book.creation_date.strftime('%Y-%m-%d %H:%M') if book.creation_date else ''
+        }}</small>
+      <small class="text d-block mb-3">Actualizado: {{ book.last_update_date.strftime('%Y-%m-%d %H:%M') if
+        book.last_update_date else '' }}</small>
+    </div>
+
+    {% if book.creator_user_id == session.get('user_id') %}
+    <a class="btn btn-success" href="{{ url_for('new_chapter', book_id=book.id) }}">+ Agregar capítulo</a>
+    {% endif %}
+  </div>
 </div>
 
-<div class="section">
+<div class="section mb-4">
   <div class="mb-3 d-flex align-items-center justify-content-between">
     <h4 class="text">Capítulos</h4>
     <span class="text">Página {{ pagination.page }} de {{ pagination.pages or 1 }}</span>
@@ -26,7 +29,7 @@
   {% if chapters %}
   <div class="list-group">
     {% for c in chapters %}
-    <a href="{{ c.content_url }}" target="_blank" class="list-group-item list-group-item-action"
+    <a href="{{ url_for('chapter_reader', chapter_id=c.id) }}" class="list-group-item list-group-item-action"
       style="background-color:#1e1e1e; color:#f5f5f5; border-color:#2a2a2a;">
       {{ c.title }}
     </a>
@@ -40,20 +43,72 @@
     <ul class="pagination">
       <li class="page-item {{ 'disabled' if not pagination.has_prev }}">
         <a class="page-link"
-          href="{{ url_for('book_detail', book_id=book.id, page=pagination.prev_num) if pagination.has_prev else '#' }}">
-          Anterior
-        </a>
+          href="{{ url_for('book_detail', book_id=book.id, page=pagination.prev_num) if pagination.has_prev else '#' }}">Anterior</a>
       </li>
-      <li class="page-item disabled">
-        <a class="page-link" href="#">{{ pagination.page }}</a>
-      </li>
+      <li class="page-item disabled"><a class="page-link" href="#">{{ pagination.page }}</a></li>
       <li class="page-item {{ 'disabled' if not pagination.has_next }}">
         <a class="page-link"
-          href="{{ url_for('book_detail', book_id=book.id, page=pagination.next_num) if pagination.has_next else '#' }}">
-          Siguiente
-        </a>
+          href="{{ url_for('book_detail', book_id=book.id, page=pagination.next_num) if pagination.has_next else '#' }}">Siguiente</a>
       </li>
     </ul>
   </nav>
 </div>
+
+<div class="section">
+  <h4 class="text mb-3">Comentarios</h4>
+
+  <form class="mb-3" method="POST" action="{{ url_for('book_detail', book_id=book.id, page=pagination.page) }}">
+    <input type="hidden" name="action" value="create_comment">
+    <div class="input-group">
+      <input type="text" class="form-control text" name="content" placeholder="Escribe un comentario..." required>
+      <button class="btn btn-primary">Publicar</button>
+    </div>
+  </form>
+
+  {% if comments %}
+  <div class="list-group">
+    {% for cm in comments %}
+    <div class="list-group-item" style="background-color:#1e1e1e; color:#f5f5f5; border-color:#2a2a2a;">
+      <div class="d-flex justify-content-between align-items-start">
+        <div>
+          <strong class="text">@{{ cm.commentator.username if cm.commentator else 'usuario' }}</strong>
+          <small class="text ms-2">
+            {{ cm.creation_date.strftime('%Y-%m-%d %H:%M') if cm.creation_date else '' }}
+          </small>
+          <p class="m-0 text">{{ cm.content }}</p>
+        </div>
+
+        {% if cm.commentator_user_id == session.get('user_id') %}
+        <div class="d-flex gap-2">
+
+          <form method="POST" action="{{ url_for('book_detail', book_id=book.id, page=pagination.page) }}">
+            <input type="hidden" name="action" value="edit_comment">
+            <input type="hidden" name="comment_id" value="{{ cm.id }}">
+            <input type="hidden" name="content" id="edit-content-{{ cm.id }}">
+            <button type="button" class="btn btn-sm btn-outline-light"
+              onclick="const v=prompt('Editar comentario', '{{ cm.content|e }}'); if(v!==null){ document.getElementById('edit-content-{{ cm.id }}').value=v; this.closest('form').submit(); }">
+              Editar
+            </button>
+          </form>
+
+          <form method="POST" action="{{ url_for('book_detail', book_id=book.id, page=pagination.page) }}">
+            <input type="hidden" name="action" value="delete_comment">
+            <input type="hidden" name="comment_id" value="{{ cm.id }}">
+            <button class="btn btn-sm btn-danger" onclick="return confirm('¿Eliminar comentario?')">
+              Eliminar
+            </button>
+          </form>
+
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p class="text">Sé el primero en comentar.</p>
+  {% endif %}
+</div>
+
+
 {% endblock %}

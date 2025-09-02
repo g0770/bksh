@@ -11,8 +11,14 @@ body {
   border-radius: 12px;
 }
 
+.subCard {
+  background-color: #272727;
+  border: none;
+  border-radius: 12px;
+}
+
 .text {
-  color: #979797,
+  color: #979797
 }
 
 .text::placeholder {

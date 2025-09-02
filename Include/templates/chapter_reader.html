@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ chapter.title }} – Lector{% endblock %}
+{% block content %}
+<div class="section">
+  <div class="d-flex align-items-center justify-content-between">
+    <h3 class="text">{{ chapter.title }}</h3>
+    <a class="btn btn-outline-light" href="{{ url_for('uploaded_file', filename=filename) }}" download>Descargar</a>
+  </div>
+
+  {% if is_md %}
+  <hr class="border-secondary">
+  <div class="text" style="white-space: normal;">
+    {{ md_html|safe }}
+  </div>
+  {% elif is_pdf %}
+  <hr class="border-secondary">
+  <div class="ratio ratio-16x9">
+    <iframe src="{{ url_for('uploaded_file', filename=filename) }}" title="PDF" frameborder="0"></iframe>
+  </div>
+  {% else %}
+  <p class="text">Formato no soportado.</p>
+  {% endif %}
+</div>
+{% endblock %}
